@@ -5,6 +5,6 @@ RUN mvn clean package -DskipTests
 
 FROM openjdk:21-jdk-slim
 WORKDIR /app
-COPY --from=builder /app/target/spring_jwt_auth-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/target/spring-jwt-auth-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
