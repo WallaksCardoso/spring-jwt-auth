@@ -37,8 +37,10 @@ public class SecurityConfig {
             "/swagger-resources/**",
             "/webjars/**",
             "/favicon.ico",
-            "/h2-console/**"
+            "/h2-console/**",
+            "/actuator/health"
     };
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
