@@ -60,7 +60,9 @@ Acesse via navegador:
 
 ###  Autenticação
 
-- `POST /auth/login` – Realiza login e retorna o token JWT  
+###  Usuários
+
+- `POST /api/pessoas/cadastrar` – Cadastra novo usuário  
   **Requisição:**
 
   {
@@ -68,9 +70,7 @@ Acesse via navegador:
   "senha": "123456"
   }
 
-###  Usuários
-
-- `POST /api/pessoas/cadastrar` – Cadastra novo usuário  
+- `POST /auth/login` – Realiza login e retorna o token JWT  
   **Requisição:**
 
   {
