@@ -58,8 +58,6 @@ Acesse via navegador:
 
 ##  Endpoints Principais
 
-###  Autenticação
-
 ###  Usuários
 
 - `POST /api/pessoas/cadastrar` – Cadastra novo usuário  
@@ -69,6 +67,8 @@ Acesse via navegador:
   "nome": "usuario123",
   "senha": "123456"
   }
+
+###  Autenticação
 
 - `POST /auth/login` – Realiza login e retorna o token JWT  
   **Requisição:**
