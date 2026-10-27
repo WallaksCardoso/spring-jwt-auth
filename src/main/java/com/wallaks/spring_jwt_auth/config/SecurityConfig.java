@@ -56,15 +56,15 @@ public class SecurityConfig {
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        if (isTestProfileActive()) {
+        if (isPerfilLocalAtivo()) {
             http.headers(AbstractHttpConfigurer::disable);
         }
 
         return http.build();
     }
 
-    private boolean isTestProfileActive() {
-        return environment.acceptsProfiles(Profiles.of("test"));
+    private boolean isPerfilLocalAtivo() {
+        return environment.acceptsProfiles(Profiles.of("local"));
     }
 
     @Bean

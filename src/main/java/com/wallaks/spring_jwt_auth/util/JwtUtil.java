@@ -1,13 +1,12 @@
 package com.wallaks.spring_jwt_auth.util;
 
-
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
 
 @Component
 public class JwtUtil {
@@ -15,22 +14,29 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
+    @Value("${jwt.expiracao-ms:86400000}")
+    private long expiracaoMs;
+
+    private SecretKey chave() {
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
 
     public String gerarToken(String nome) {
+        Date agora = new Date();
         return Jwts.builder()
-                .setSubject(nome)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes()), SignatureAlgorithm.HS256)
+                .subject(nome)
+                .issuedAt(agora)
+                .expiration(new Date(agora.getTime() + expiracaoMs))
+                .signWith(chave())
                 .compact();
     }
 
     public String extrairNome(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secret.getBytes())
+        return Jwts.parser()
+                .verifyWith(chave())
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
+                .parseSignedClaims(token)
+                .getPayload()
                 .getSubject();
     }
 

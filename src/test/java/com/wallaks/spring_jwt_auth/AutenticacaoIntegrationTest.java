@@ -58,6 +58,27 @@ class AutenticacaoIntegrationTest {
     }
 
     @Test
+    void cadastroDevolveSoIdENome() throws Exception {
+        mockMvc.perform(post("/api/pessoas/cadastrar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"ana\",\"senha\":\"segredo123\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.nome").value("ana"))
+                .andExpect(jsonPath("$.senha").doesNotExist());
+    }
+
+    @Test
+    void nomeRepetidoDevolveConflito() throws Exception {
+        cadastrar("pedro", "segredo123");
+
+        mockMvc.perform(post("/api/pessoas/cadastrar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nome\":\"pedro\",\"senha\":\"segredo123\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void rotaProtegidaSemTokenERecusada() throws Exception {
         mockMvc.perform(get("/api/pessoas"))
                 .andExpect(status().isForbidden());

@@ -10,12 +10,13 @@ API REST de autenticação stateless com JWT: cadastro de usuários, login e pro
 ## Sobre
 
 Base de autenticação para APIs Spring: o usuário se cadastra, faz login e recebe um token JWT
-assinado (HS256, validade de 24 horas). As demais rotas exigem esse token no cabeçalho
+assinado (HS256, validade configurável, 24 horas por padrão). As demais rotas exigem esse token no cabeçalho
 `Authorization`. Sem sessão no servidor: cada requisição é validada pelo token.
 
 ## Funcionalidades
 
 - Cadastro de usuário com validação (nome de 3 a 20 caracteres, senha com no mínimo 6)
+- Nome repetido devolve 409 (conflito); a resposta do cadastro traz só `id` e `nome`
 - Senha armazenada com hash (BCrypt)
 - Login que devolve o token JWT
 - Filtro que valida o token em todas as rotas protegidas
@@ -26,7 +27,7 @@ assinado (HS256, validade de 24 horas). As demais rotas exigem esse token no cab
 ## Stack
 
 - Java 21 e Spring Boot 3.5 (Web, Security, Data JPA, Validation)
-- JJWT 0.11
+- JJWT 0.12
 - PostgreSQL em produção; H2 em memória nos testes
 - springdoc-openapi (Swagger UI)
 - Maven, Docker e GitHub Actions
@@ -65,9 +66,17 @@ A aplicação lê a configuração de variáveis de ambiente:
 | `SPRING_DATASOURCE_USERNAME` | Usuário do banco |
 | `SPRING_DATASOURCE_PASSWORD` | Senha do banco |
 | `JWT_SECRET` | Chave de assinatura do token, com pelo menos 32 caracteres |
+| `JWT_EXPIRACAOMS` | Opcional. Validade do token em milissegundos (padrão: 86400000) |
 
 ```bash
 ./mvnw spring-boot:run
+```
+
+Para desenvolvimento, o perfil `local` (`application-local.properties`) cria as tabelas
+automaticamente e sobe na porta 8081:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 Com Docker:
@@ -89,7 +98,8 @@ A documentação da API fica em `http://localhost:8080/swagger-ui/index.html`.
 ```
 
 Os testes sobem a aplicação com H2 em memória (sem precisar de PostgreSQL) e cobrem o fluxo de
-cadastro, login com token, senha errada, dados inválidos e acesso sem token. A CI roda a cada push.
+cadastro, resposta sem senha, nome repetido, login com token, senha errada, dados inválidos e acesso
+sem token. A CI roda os testes e monta a imagem Docker a cada push.
 
 ## Estrutura
 
