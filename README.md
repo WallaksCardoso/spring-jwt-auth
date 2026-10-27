@@ -67,6 +67,7 @@ A aplicação lê a configuração de variáveis de ambiente:
 | `SPRING_DATASOURCE_PASSWORD` | Senha do banco |
 | `JWT_SECRET` | Chave de assinatura do token, com pelo menos 32 caracteres |
 | `JWT_EXPIRACAOMS` | Opcional. Validade do token em milissegundos (padrão: 86400000) |
+| `CORS_ORIGENS` | Opcional. Origens liberadas no navegador, separadas por vírgula (padrão: Live Server local e `https://wallakscardoso.github.io`) |
 
 ```bash
 ./mvnw spring-boot:run
