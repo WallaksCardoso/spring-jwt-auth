@@ -1,96 +1,54 @@
-# Spring JWT Auth
-
-API REST de autenticação stateless com JWT: cadastro de usuários, login e proteção das demais rotas por token.
+# spring-jwt-auth
 
 [![CI](https://github.com/WallaksCardoso/spring-jwt-auth/actions/workflows/ci.yml/badge.svg)](https://github.com/WallaksCardoso/spring-jwt-auth/actions/workflows/ci.yml)
-![Java](https://img.shields.io/badge/Java-21-informational)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-informational)
-[![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-informational)](LICENSE)
 
-## Sobre
+Serviço de autenticação do sistema da pelada. O usuário se cadastra, faz login e recebe um JWT; o
+[pelada-gestao](https://github.com/WallaksCardoso/pelada-gestao) valida esse token com a mesma
+chave, sem precisar consultar este serviço a cada requisição.
 
-Base de autenticação para APIs Spring: o usuário se cadastra, faz login e recebe um token JWT
-assinado (HS256, validade configurável, 24 horas por padrão). As demais rotas exigem esse token no cabeçalho
-`Authorization`. Sem sessão no servidor: cada requisição é validada pelo token.
+Separei a autenticação em um serviço próprio para estudar como fica o login quando há mais de uma
+API: nenhuma sessão no servidor, só o token assinado (HS256, 24 horas por padrão).
 
-## Funcionalidades
+## Rotas
 
-- Cadastro de usuário com validação (nome de 3 a 20 caracteres, senha com no mínimo 6)
-- Nome repetido devolve 409 (conflito); a resposta do cadastro traz só `id` e `nome`
-- Senha armazenada com hash (BCrypt)
-- Login que devolve o token JWT
-- Filtro que valida o token em todas as rotas protegidas
-- Erros de validação devolvidos campo a campo
-- Documentação interativa com Swagger (OpenAPI)
-- Coleção do Postman em `src/main/resources/spring-jwt-auth.postman_collection.json`
-
-## Stack
-
-- Java 21 e Spring Boot 3.5 (Web, Security, Data JPA, Validation)
-- JJWT 0.12
-- PostgreSQL em produção; H2 em memória nos testes
-- springdoc-openapi (Swagger UI)
-- Maven, Docker e GitHub Actions
-
-## Endpoints
-
-| Método | Rota | Acesso | Descrição |
-| --- | --- | --- | --- |
-| `POST` | `/api/pessoas/cadastrar` | público | Cadastra um usuário |
-| `POST` | `/api/auth/login` | público | Autentica e devolve o token |
-| `GET` | `/actuator/health` | público | Saúde da aplicação |
-| qualquer outra | | token | Exige `Authorization: Bearer <token>` |
-
-Exemplo:
+| Método | Rota | Acesso |
+| --- | --- | --- |
+| `POST` | `/api/pessoas/cadastrar` | público |
+| `POST` | `/api/auth/login` | público |
+| `GET` | `/actuator/health` | público |
+| demais | | `Authorization: Bearer <token>` |
 
 ```bash
-curl -X POST http://localhost:8080/api/pessoas/cadastrar \
+curl -X POST http://localhost:8081/api/pessoas/cadastrar \
   -H "Content-Type: application/json" \
   -d '{"nome": "maria", "senha": "segredo123"}'
 
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST http://localhost:8081/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"nome": "maria", "senha": "segredo123"}'
-# {"token": "eyJhbGciOiJIUzI1NiJ9..."}
 ```
 
-## Como rodar
+Nome com 3 a 20 caracteres e senha com pelo menos 6. Nome repetido devolve 409, a senha é guardada
+com BCrypt e nunca volta na resposta. O Swagger fica em `/swagger-ui/index.html` e há uma coleção do
+Postman em `src/main/resources`.
 
-Pré-requisitos: Java 21 e um PostgreSQL acessível.
+## Rodando
 
-A aplicação lê a configuração de variáveis de ambiente:
+O jeito mais simples é subir o sistema inteiro pelo Docker Compose do
+[pelada-gestao](https://github.com/WallaksCardoso/pelada-gestao#subindo-tudo).
 
-| Variável | Descrição |
-| --- | --- |
-| `SPRING_DATASOURCE_URL` | URL JDBC do PostgreSQL, ex.: `jdbc:postgresql://localhost:5432/auth` |
-| `SPRING_DATASOURCE_USERNAME` | Usuário do banco |
-| `SPRING_DATASOURCE_PASSWORD` | Senha do banco |
-| `JWT_SECRET` | Chave de assinatura do token, com pelo menos 32 caracteres |
-| `JWT_EXPIRACAOMS` | Opcional. Validade do token em milissegundos (padrão: 86400000) |
-| `CORS_ORIGENS` | Opcional. Origens liberadas no navegador, separadas por vírgula (padrão: Live Server local e `https://wallakscardoso.github.io`) |
+Sozinho, com Java 21 e um PostgreSQL:
 
 ```bash
-./mvnw spring-boot:run
-```
-
-Para desenvolvimento, o perfil `local` (`application-local.properties`) cria as tabelas
-automaticamente e sobe na porta 8081:
-
-```bash
+export SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/auth
+export SPRING_DATASOURCE_USERNAME=postgres
+export SPRING_DATASOURCE_PASSWORD=postgres
+export JWT_SECRET=uma-chave-com-pelo-menos-32-caracteres
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
-Com Docker:
-
-```bash
-docker build -t spring-jwt-auth .
-docker run -p 8080:8080 \
-  -e SPRING_DATASOURCE_URL=... -e SPRING_DATASOURCE_USERNAME=... \
-  -e SPRING_DATASOURCE_PASSWORD=... -e JWT_SECRET=... \
-  spring-jwt-auth
-```
-
-A documentação da API fica em `http://localhost:8080/swagger-ui/index.html`.
+O perfil `local` cria as tabelas e sobe na porta 8081. Opcionais: `JWT_EXPIRACAOMS` (validade do
+token) e `CORS_ORIGENS` (origens liberadas, separadas por vírgula).
 
 ## Testes
 
@@ -98,25 +56,9 @@ A documentação da API fica em `http://localhost:8080/swagger-ui/index.html`.
 ./mvnw verify
 ```
 
-Os testes sobem a aplicação com H2 em memória (sem precisar de PostgreSQL) e cobrem o fluxo de
-cadastro, resposta sem senha, nome repetido, login com token, senha errada, dados inválidos e acesso
-sem token. A CI roda os testes e monta a imagem Docker a cada push.
-
-## Estrutura
-
-```
-src/main/java/com/wallaks/spring_jwt_auth/
-  config/       segurança (Spring Security) e CORS
-  controller/   rotas de autenticação e cadastro
-  dto/          entrada e saída da API
-  exception/    tratamento global de erros
-  model/        entidades JPA
-  repository/   acesso ao banco
-  security/     filtro que valida o JWT
-  service/      regras de cadastro e usuários
-  util/         geração e leitura do token
-```
+Sobem a aplicação com H2 em memória e passam pelo fluxo completo: cadastro, nome repetido, login,
+senha errada, dados inválidos e acesso sem token.
 
 ## Licença
 
-[MIT](LICENSE)
+MIT
